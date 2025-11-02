@@ -15,7 +15,7 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         // Judul aplikasi "Football News" dengan teks putih dan tebal.
         title: const Text(
-          'Football News',
+          'Football Collectibles',
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         // Warna latar belakang AppBar diambil dari skema warna tema aplikasi.
@@ -50,7 +50,7 @@ class MyHomePage extends StatelessWidget {
                   const Padding(
                     padding: EdgeInsets.only(top: 16.0),
                     child: Text(
-                      'Selamat datang di Football News',
+                      'Selamat datang di Football Collectibles',
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18.0,
@@ -83,8 +83,8 @@ class MyHomePage extends StatelessWidget {
   }
 
   final List<ItemHomepage> items = [
-    ItemHomepage("All Products", Icons.newspaper, Colors.blue),
-    ItemHomepage("My Products", Icons.add, Colors.green),
+    ItemHomepage("All Products", Icons.shopping_bag, Colors.blue),
+    ItemHomepage("My Products", Icons.inventory, Colors.green),
     ItemHomepage("Create Product", Icons.add, Colors.red),
   ];
 }
@@ -151,9 +151,7 @@ class ItemCard extends StatelessWidget {
           ScaffoldMessenger.of(context)
             ..hideCurrentSnackBar()
             ..showSnackBar(
-              SnackBar(
-                content: Text("Kamu telah menekan tombol ${item.name}"),
-              ),
+              SnackBar(content: Text("Kamu telah menekan tombol ${item.name}")),
             );
         },
         // Container untuk menyimpan Icon dan Text
