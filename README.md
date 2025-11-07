@@ -148,3 +148,309 @@ NextGen. (t.t.). *Flutter MaterialApp.* Diakses dari [https://nextgen.co.id/flut
 Nash, R. (2022, January 13). *Why Every Flutter Dev Should Care About BuildContext.* GetStream. Diakses dari [https://getstream.io/blog/flutter-buildcontext/](https://getstream.io/blog/flutter-buildcontext/)
 
 GeeksforGeeks. (2023, February 14). *Difference Between Hot Reload and Hot Restart in Flutter.* Diakses dari [https://www.geeksforgeeks.org/flutter/difference-between-hot-reload-and-hot-restart-in-flutter/](https://www.geeksforgeeks.org/flutter/difference-between-hot-reload-and-hot-restart-in-flutter/)
+
+
+<div align="center">
+
+# **TUGAS 8**
+
+</div>
+
+### 1. Jelaskan perbedaan antara Navigator.push() dan Navigator.pushReplacement() pada Flutter. Dalam kasus apa sebaiknya masing-masing digunakan pada aplikasi Football Shop kamu?
+
+#### Perbandingan
+
+| Aspek                           | Navigator.push()       | Navigator.pushReplacement()           |
+| ------------------------------- | ---------------------- | ------------------------------------- |
+| **Aksi pada Stack**             | Menambahkan route baru | Mengganti route paling atas           |
+| **Akses ke Halaman Sebelumnya** | Bisa kembali (Back)    | Tidak bisa kembali                    |
+| **Tujuan Penggunaan**           | Navigasi sementara     | Navigasi permanen antar halaman utama |
+
+#### 1. Menggunakan Navigator.push()
+
+**Contoh:**
+
+```dart
+if (item.name == "Create Product") {
+  Navigator.push(
+    context,
+    MaterialPageRoute(builder: (context) => ProductFormPage()),
+  );
+}
+```
+
+**Alasan:**
+
+* Pengguna perlu kembali ke halaman Home setelah membuka form.
+* State halaman Home tetap terjaga.
+* Navigasi bersifat sementara, misalnya ketika pengguna membatalkan pengisian form.
+
+#### 2. Menggunakan Navigator.pushReplacement()
+
+**Contoh:**
+
+```dart
+ListTile(
+  leading: const Icon(Icons.home_outlined),
+  title: const Text('Home'),
+  onTap: () {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => MyHomePage()),
+    );
+  },
+);
+```
+
+**Alasan:**
+
+* Navigasi dari Drawer Menu ke halaman utama lain (misalnya Home atau Create Product).
+* Tidak perlu menumpuk halaman lama di stack.
+* Menghindari loop navigasi seperti Home → Form → Home → Form...
+* Lebih efisien memori karena hanya satu halaman aktif di atas stack.
+
+---
+
+### 2. Bagaimana kamu memanfaatkan hierarchy widget seperti Scaffold, AppBar, dan Drawer untuk membangun struktur halaman yang konsisten di seluruh aplikasi?
+
+Scaffold merupakan widget utama yang menyediakan kerangka dasar aplikasi Flutter berbasis Material Design.
+Widget ini memperluas seluruh layar perangkat dan menjadi wadah bagi elemen-elemen seperti AppBar, Drawer, dan konten utama.
+Dengan menggunakan Scaffold secara konsisten, setiap halaman aplikasi memiliki struktur layout yang seragam dan profesional.
+
+AppBar adalah bagian atas halaman (toolbar) yang biasanya berisi judul dan tombol aksi umum.
+Penggunaan AppBar yang konsisten (warna, ikon, elevasi) membantu menjaga identitas visual dan pengalaman pengguna yang selaras di seluruh halaman.
+
+Drawer digunakan untuk navigasi global ke berbagai halaman atau fitur dalam aplikasi.
+Biasanya ditampilkan dalam bentuk ikon tiga garis di sudut kiri atas (hamburger icon), yang saat diklik menampilkan menu navigasi ke rute lain.
+Dengan Drawer, pengguna dapat berpindah antar layar dengan mudah, terutama pada aplikasi yang memiliki banyak halaman.
+
+**Contoh Implementasi pada Football Collectibles:**
+
+```dart
+return Scaffold(
+  // AppBar menampilkan judul halaman di bagian atas.
+  appBar: AppBar(
+    title: const Text(
+      'Football Collectibles',
+      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+    ),
+    // Warna latar belakang AppBar diambil dari tema utama aplikasi.
+    backgroundColor: Theme.of(context).colorScheme.primary,
+  ),
+  drawer: LeftDrawer(),
+  // Konten utama halaman ditempatkan di body.
+);
+```
+
+Dengan menggunakan hierarki widget seperti Scaffold + AppBar + Drawer secara konsisten:
+
+* Tampilan aplikasi menjadi terpadu dan familiar di setiap halaman.
+* Kode lebih efisien, karena komponen seperti AppBar dan Drawer tidak perlu diulang di setiap halaman.
+* Navigasi global dapat diakses dengan mudah dan stabil di seluruh aplikasi.
+
+---
+
+### 3. Dalam konteks desain antarmuka, apa kelebihan menggunakan layout widget seperti Padding, SingleChildScrollView, dan ListView saat menampilkan elemen-elemen form? Berikan contoh penggunaannya dari aplikasi kamu.
+
+#### 1. Padding
+
+Padding digunakan untuk memberikan ruang kosong di sekitar widget lain, sehingga tata letak terlihat lebih rapi dan nyaman.
+Selain aspek estetika, padding juga berperan penting dalam meningkatkan keterbacaan dan interaksi pengguna pada form.
+
+**Kelebihan:**
+
+* Meningkatkan keterbacaan dan estetika (input field dan label tidak terlalu rapat).
+* Membantu menjaga layout tetap responsif di berbagai ukuran layar.
+* Membuat tampilan form lebih rapi dan mudah dipelihara.
+
+**Contoh Implementasi:**
+
+```dart
+Padding(
+  padding: const EdgeInsets.all(8.0),
+  child: TextFormField(
+    decoration: InputDecoration(
+      hintText: "Product Name",
+      labelText: "Name",
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(5.0),
+      ),
+    ),
+    validator: (String? value) {
+      if (value == null || value.isEmpty) {
+        return "Name tidak boleh kosong!";
+      }
+      if (value.length > 100) {
+        return "Name tidak boleh lebih dari 100 karakter!";
+      }
+      return null;
+    },
+  ),
+);
+```
+
+#### 2. SingleChildScrollView
+
+SingleChildScrollView digunakan untuk mencegah overflow ketika isi form terlalu panjang atau saat keyboard muncul.
+Widget ini memungkinkan halaman untuk di-scroll secara vertikal, menjaga aksesibilitas seluruh elemen form di berbagai ukuran layar.
+
+**Kelebihan:**
+
+* Menghindari error overflow saat konten melebihi tinggi layar.
+* Memastikan form tetap dapat diakses penuh di layar kecil atau orientasi landscape.
+* Memberikan pengalaman pengguna yang halus dan responsif saat melakukan pengisian form panjang.
+
+**Contoh Implementasi:**
+
+```dart
+body: Form(
+  key: _formKey,
+  child: SingleChildScrollView(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Banyak field form di sini
+      ],
+    ),
+  ),
+),
+```
+
+#### 3. ListView
+
+ListView digunakan untuk menampilkan daftar widget dalam jumlah banyak secara efisien.
+Berbeda dengan Column, ListView hanya merender item yang terlihat di layar, sehingga lebih hemat memori dan performa lebih baik.
+
+**Kelebihan:**
+
+* Ideal untuk menu navigasi atau daftar elemen yang panjang.
+* Efisien dalam performa, karena hanya me-render item yang terlihat.
+* Cocok digunakan di dalam Drawer atau halaman dengan banyak item berulang.
+
+**Contoh Implementasi:**
+
+```dart
+Drawer(
+  child: ListView(
+    children: [
+      DrawerHeader(
+        decoration: const BoxDecoration(color: Colors.blue),
+        child: const Column(
+          children: [
+            Text(
+              'Football Collectibles',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+            Padding(padding: EdgeInsets.all(8)),
+            Text(
+              "Seluruh koleksi barang sepak bola terkini di sini!",
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 14, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+      ListTile(
+        leading: const Icon(Icons.home_outlined),
+        title: const Text('Home'),
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => MyHomePage()),
+          );
+        },
+      ),
+      ListTile(
+        leading: const Icon(Icons.add),
+        title: const Text('Create Product'),
+        onTap: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => ProductFormPage()),
+          );
+        },
+      ),
+    ],
+  ),
+);
+```
+
+---
+
+### 4. Bagaimana kamu menyesuaikan warna tema agar aplikasi Football Shop memiliki identitas visual yang konsisten dengan brand toko?
+
+Theming adalah proses menetapkan sekumpulan warna, font, bentuk, dan gaya desain yang digunakan secara konsisten di seluruh aplikasi.
+Tujuannya agar aplikasi memiliki identitas visual yang seragam, mudah dikenali, serta menjaga kode tetap rapi dan efisien.
+Alih-alih menambahkan gaya secara terpisah di tiap widget, pengembang sebaiknya mendefinisikan gaya di satu tempat agar mudah dikelola dan tidak berulang (DRY – Don’t Repeat Yourself).
+
+Dalam Flutter, objek ThemeData digunakan untuk mengatur tampilan dan perilaku aplikasi.
+Properti colorScheme di dalamnya menyimpan hingga 27 properti warna yang digunakan oleh komponen bawaan Flutter dengan pola tertentu.
+
+**Implementasi Tema pada Football Collectibles:**
+
+```dart
+import 'package:flutter/material.dart';
+import 'package:football_collectibles/screens/menu.dart';
+
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Football Collectibles',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.indigo, // ← BRAND COLOR: Deep Blue / Indigo
+        ),
+        useMaterial3: true,
+      ),
+      home: MyHomePage(),
+    );
+  }
+}
+```
+
+**Penjelasan:**
+
+* ColorScheme.fromSeed() digunakan untuk menghasilkan palet warna lengkap berdasarkan satu warna utama (seed color).
+* Warna utama yang digunakan adalah Indigo, melambangkan kepercayaan, profesionalitas, dan energi kompetitif, sesuai citra brand Football Shop.
+* Penggunaan useMaterial3: true memastikan desain modern mengikuti panduan Material Design 3.
+
+### **Daftar Pustaka**
+
+1. Valentino Kim Fernando (SOY), Clarence Grady (GRD), Malvin Scafi (UMA), & Danniel (DAN). *Tutorial 7: Flutter Navigation, Layouts, Forms, and Input Elements.*
+   [https://pbp-fasilkom-ui.github.io/ganjil-2026/docs/tutorial-7](https://pbp-fasilkom-ui.github.io/ganjil-2026/docs/tutorial-7)
+
+2. *Flutter Scaffold.* Nextgen.co.id.
+   [https://nextgen.co.id/flutter-scaffold/](https://nextgen.co.id/flutter-scaffold/)
+
+3. *Flutter AppBar.* Nextgen.co.id.
+   [https://nextgen.co.id/flutter-appbar/](https://nextgen.co.id/flutter-appbar/)
+
+4. *Flutter Drawer.* Nextgen.co.id.
+   [https://nextgen.co.id/flutter-drawer/](https://nextgen.co.id/flutter-drawer/)
+
+5. Muhammad Caesar Saputra. *Memahami Penggunaan Widget Padding untuk Tata Letak yang Lebih Baik di Flutter.* BuildWithAngga, 2 Mei 2024.
+   [https://buildwithangga.com/tips/memahami-penggunaan-widget-padding-untuk-tata-letak-yang-lebih-baik-di-flutter](https://buildwithangga.com/tips/memahami-penggunaan-widget-padding-untuk-tata-letak-yang-lebih-baik-di-flutter)
+
+6. Snehal Singh. *How To Implement Flutter Scrollable Column: A Comprehensive Guide.* DhiWise, 26 April 2024.
+   [https://www.dhiwise.com/post/how-to-implement-flutter-scrollable-column](https://www.dhiwise.com/post/how-to-implement-flutter-scrollable-column)
+
+7. Jitesh Mohite. *Flutter Problem: ListView Vs Column + SingleChildScrollView.* Medium, 13 Juni 2020.
+   [https://medium.com/flutterworld/flutter-problem-listview-vs-column-singlechildscrollview-43fdde0fa355](https://medium.com/flutterworld/flutter-problem-listview-vs-column-singlechildscrollview-43fdde0fa355)
+
+8. *Theming a Flutter App: Getting Started.* Kodeco, 29 Desember 2020.
+   [https://www.kodeco.com/16628777-theming-a-flutter-app-getting-started](https://www.kodeco.com/16628777-theming-a-flutter-app-getting-started)
+
+9. RydMike. *Flutter Theming Guide.* 1–4 Mei 2022.
+   [https://rydmike.com/blog_theming_guide.html](https://rydmike.com/blog_theming_guide.html)
