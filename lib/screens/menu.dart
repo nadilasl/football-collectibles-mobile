@@ -98,6 +98,7 @@ class MyHomePage extends StatelessWidget {
       color: Colors.green,
     ),
     ItemHomepage(name: "Create Product", icon: Icons.add, color: Colors.red),
+    ItemHomepage(name: "Logout", icon: Icons.logout, color: Colors.orange),
   ];
 }
 

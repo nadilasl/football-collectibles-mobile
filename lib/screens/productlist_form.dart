@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:football_collectibles/widgets/left_drawer.dart';
+import 'package:football_collectibles/theme/app_theme.dart';
+import 'package:provider/provider.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:football_collectibles/screens/menu.dart';
 
 class ProductFormPage extends StatefulWidget {
   const ProductFormPage({super.key});
@@ -24,6 +28,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
   String _condition = "new";
   bool _authenticityCertificate = false;
   String _rarityLevel = "common";
+  bool _isLoading = false;
 
   final List<Map<String, String>> _categories = [
     {'value': 'jersey', 'label': 'Jersey'},
@@ -64,12 +69,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
   ];
   @override
   Widget build(BuildContext context) {
+    final request = context.watch<CookieRequest>();
     return Scaffold(
-      appBar: AppBar(
-        title: const Center(child: Text('Form Tambah Barang')),
-        backgroundColor: Colors.indigo,
-        foregroundColor: Colors.white,
-      ),
+      appBar: AppBar(title: const Center(child: Text('Form Tambah Barang'))),
       drawer: LeftDrawer(),
       body: Form(
         key: _formKey,
@@ -453,77 +455,169 @@ class _ProductFormPageState extends State<ProductFormPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: ElevatedButton(
-                    style: ButtonStyle(
-                      backgroundColor: MaterialStateProperty.all(Colors.indigo),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Theme.of(context).colorScheme.onPrimary,
                     ),
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        showDialog(
-                          context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Produk berhasil disimpan!'),
-                              content: SingleChildScrollView(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text('Nama: $_name'),
-                                    Text('Harga: Rp $_price'),
-                                    Text('Deskripsi: $_description'),
-                                    Text('Thumbnail: $_thumbnail'),
-                                    Text('Kategori: $_category'),
-                                    Text('Stok: $_stock'),
-                                    Text('Brand: $_brand'),
-                                    Text('Tahun Rilis: ${_releaseYear ?? "-"}'),
-                                    Text(
-                                      'Ukuran: ${_size.isEmpty ? "-" : _size}',
-                                    ),
-                                    Text('Tipe Edisi: $_editionType'),
-                                    Text('Kondisi: $_condition'),
-                                    Text('Kelangkaan: $_rarityLevel'),
-                                    Text(
-                                      'Unggulan: ${_isFeatured ? "Ya" : "Tidak"}',
-                                    ),
-                                    Text(
-                                      'Sertifikat: ${_authenticityCertificate ? "Ya" : "Tidak"}',
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              actions: [
-                                TextButton(
-                                  child: const Text('OK'),
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                    _formKey.currentState!.reset();
-                                    setState(() {
-                                      _name = "";
-                                      _price = 0;
-                                      _description = "";
-                                      _thumbnail = "";
-                                      _category = "jersey";
-                                      _stock = 0;
-                                      _brand = "";
-                                      _releaseYear = null;
-                                      _size = "";
-                                      _editionType = "replica";
-                                      _condition = "new";
-                                      _isFeatured = false;
-                                      _authenticityCertificate = false;
-                                      _rarityLevel = "common";
-                                    });
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                            if (_formKey.currentState!.validate()) {
+                              setState(() {
+                                _isLoading = true;
+                              });
+
+                              try {
+                                // Post data ke Django
+                                final response = await request.post(
+                                  'http://localhost:8000/api/products/create/',
+                                  {
+                                    'name': _name,
+                                    'price': _price.toString(),
+                                    'description': _description,
+                                    'thumbnail': _thumbnail,
+                                    'category': _category,
+                                    'stock': _stock.toString(),
+                                    'brand': _brand,
+                                    'release_year':
+                                        _releaseYear?.toString() ?? '',
+                                    'size': _size,
+                                    'edition_type': _editionType,
+                                    'condition': _condition,
+                                    'authenticity_certificate':
+                                        _authenticityCertificate.toString(),
+                                    'rarity_level': _rarityLevel,
+                                    'is_featured': _isFeatured.toString(),
                                   },
-                                ),
-                              ],
-                            );
+                                );
+
+                                if (context.mounted) {
+                                  // Handle berbagai format response
+                                  bool isSuccess = false;
+                                  String message =
+                                      "Produk berhasil ditambahkan!";
+
+                                  if (response is Map) {
+                                    // Check berbagai format response
+                                    if (response.containsKey('status')) {
+                                      isSuccess =
+                                          response['status'] == 'success' ||
+                                          response['status'] == true;
+                                      message = response['message'] ?? message;
+                                    } else if (response.containsKey(
+                                      'success',
+                                    )) {
+                                      isSuccess = response['success'] == true;
+                                      message = response['message'] ?? message;
+                                    } else if (response.containsKey('id')) {
+                                      // Product berhasil dibuat (punya id)
+                                      isSuccess = true;
+                                    }
+                                  }
+
+                                  if (isSuccess) {
+                                    final feedback = Theme.of(
+                                      context,
+                                    ).extension<FeedbackColors>();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: feedback?.successBg,
+                                        content: Text(
+                                          message,
+                                          style: TextStyle(
+                                            color: feedback?.successText,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                    Future.delayed(
+                                      const Duration(seconds: 1),
+                                      () {
+                                        Navigator.pushReplacement(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => MyHomePage(),
+                                          ),
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    final feedback = Theme.of(
+                                      context,
+                                    ).extension<FeedbackColors>();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        backgroundColor: feedback?.errorBg,
+                                        content: Text(
+                                          message.isNotEmpty
+                                              ? message
+                                              : "Gagal menambahkan produk.",
+                                          style: TextStyle(
+                                            color: feedback?.errorText,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              } catch (e) {
+                                if (context.mounted) {
+                                  final feedback = Theme.of(
+                                    context,
+                                  ).extension<FeedbackColors>();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      backgroundColor: feedback?.errorBg,
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "❌ Tidak bisa connect ke Django server",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: feedback?.errorText,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Pastikan Django running: python manage.py runserver",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: feedback?.errorText,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                }
+                              } finally {
+                                if (mounted) {
+                                  setState(() {
+                                    _isLoading = false;
+                                  });
+                                }
+                              }
+                            }
                           },
-                        );
-                      }
-                    },
-                    child: const Text(
-                      "Simpan",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Simpan",
+                            style: TextStyle(color: Colors.white),
+                          ),
                   ),
                 ),
               ),
